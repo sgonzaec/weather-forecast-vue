@@ -4,7 +4,7 @@ import WeatherInfo from "../WeatherInfo/WeatherInfo.vue";
 
 <template>
   <nav>
-    <label for="searchbar">TuClima.com</label>
+    <label for="searchbar">WeatherForecast.com</label>
     <div class="groupDataUser">
       <input
         type="search"
@@ -22,13 +22,13 @@ import WeatherInfo from "../WeatherInfo/WeatherInfo.vue";
       </button>
     </div>
   </nav>
-  <div :class="{'mainContainer_loading': isLoading, 'mainContainer': !isLoading}">
+  <div :class="{ mainContainer_loading: isLoading, mainContainer: !isLoading }">
     <div v-if="isLoading" class="lds-facebook">
       <div></div>
       <div></div>
       <div></div>
     </div>
-    <div v-else style="display: contents;">
+    <div v-else style="display: contents">
       <WeatherInfo v-if="savedValue !== ''" :data="savedValue" />
     </div>
   </div>
@@ -50,25 +50,35 @@ export default {
   },
   methods: {
     manualLocation() {
-      //   const ubicacion = this.handleCityChange; // Reemplaza con la ciudad y país deseados
+      if (this.handleCityChange === "") return;
 
-      const url = `http://api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=${this.API_KEY}`;
-
-      fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+      fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${this.handleCityChange}&appid=${this.API_KEY}`,
+        {
+          headers: {
+            accept: "*/*",
+            "accept-language": "en-US,en;q=0.9,es;q=0.8",
+            "sec-ch-ua":
+              '"Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+          },
+          referrerPolicy: "strict-origin-when-cross-origin",
+          body: null,
+          method: "GET",
+          mode: "cors",
+          credentials: "omit",
+        }
+      )
         .then((response) => response.json())
         .then((data) => {
-          console.log("Datos del clima:", data);
+          this.savedValue = data;
         })
         .catch((error) => {
           console.error("Error al obtener los datos del clima:", error);
         });
-
-      this.savedValue = this.handleCityChange;
     },
     autoLocation() {
       if (navigator.geolocation) {
@@ -79,7 +89,6 @@ export default {
           fetch(
             `https://api.openweathermap.org/data/2.5/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}&appid=${this.API_KEY}`,
             {
-              referrer: "http://localhost:8080/",
               referrerPolicy: "strict-origin-when-cross-origin",
               body: null,
               method: "GET",
