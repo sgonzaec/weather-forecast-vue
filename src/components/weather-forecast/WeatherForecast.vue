@@ -29,7 +29,13 @@ import WeatherInfo from "../WeatherInfo/WeatherInfo.vue";
       <div></div>
     </div>
     <div v-else style="display: contents">
-      <WeatherInfo v-if="savedValue !== ''" :data="savedValue" />
+      <img
+        v-if="savedValue === ''"
+        src="../../assets/snowy-1.svg"
+        alt="background"
+        id="background_weather"
+      />
+      <WeatherInfo v-else :data="savedValue" />
     </div>
   </div>
   <footer>
@@ -136,6 +142,12 @@ nav {
   gap: 1em;
   align-items: center;
   flex-direction: column;
+}
+#background_weather {
+    width: 10em;
+    position: absolute;
+    top: calc(50% - 4em);
+    z-index: -1;
 }
 .mainContainer_loading {
   display: grid;
