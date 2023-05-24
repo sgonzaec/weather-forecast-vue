@@ -1,5 +1,10 @@
 # weather-forecast
 
+## Production URL
+```
+https://sgonzaec.github.io/weather-forecast-vue/
+```
+
 ## Project setup
 ```
 npm install

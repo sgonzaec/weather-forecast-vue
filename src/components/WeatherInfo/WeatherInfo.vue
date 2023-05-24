@@ -3,16 +3,6 @@ export default {
   props: {
     data: Object,
   },
-  data() {
-    return {
-      weatherIcon: this.data?.weather?.[0]?.icon, // Valor dinámico del icono del clima
-    };
-  },
-  methods: {
-    getWeatherIconUrl(icon) {
-      return `https://openweathermap.org/img/wn/${icon}@2x.png`;
-    },
-  },
 };
 </script>
 
@@ -22,11 +12,11 @@ export default {
     <span class="clouds">Clouds: {{ data?.clouds?.all }}%</span>
     <div class="weather">
       <img
-        :src="getWeatherIconUrl(weatherIcon)"
+        :src="`https://openweathermap.org/img/wn/${data?.weather?.[0]?.icon}@2x.png`"
         alt="icon_weather"
         class="icon"
       />
-      <p class="description">{{ data?.weather?.[0]?.description }}</p>
+      <p class="description">{{ data?.weather?.[0]?.main }}</p>
     </div>
   </div>
 </template>
@@ -43,8 +33,8 @@ export default {
   align-items: center;
   box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
 }
-.weather{
-    display: flex;
-    align-items: center;
+.weather {
+  display: flex;
+  align-items: center;
 }
 </style>
