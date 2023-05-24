@@ -35,6 +35,7 @@ import WeatherInfo from "../WeatherInfo/WeatherInfo.vue";
         alt="background"
         id="background_weather"
       />
+      <!-- <p v-else-if="!isValid" class="errorText">Por favor ingresa texto sin caracteres especiales ni numeros.</p> -->
       <WeatherInfo v-else :data="savedValue" />
     </div>
   </div>
@@ -50,16 +51,25 @@ export default {
       isLoading: false,
       API_KEY: "a79bcd1f286c5df8c8cda3ec06202e20",
       handleCityChange: "",
+      isValid: true,
       savedValue: "",
       isCurrentLocation: false,
     };
   },
   methods: {
+    validateText() {
+      const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+      this.isValid = regex.test(this.savedValue);
+    },
+    quitarTildes(texto) {
+      return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    },
     manualLocation() {
-      if (this.handleCityChange === "") return;
+      this.validateText();
+      if (this.handleCityChange === "" && !this.isValid) return;
 
       fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${this.handleCityChange}&appid=${this.API_KEY}`,
+        `https://api.openweathermap.org/data/2.5/weather?q=${this.quitarTildes(this.handleCityChange)}&appid=${this.API_KEY}`,
         {
           headers: {
             accept: "*/*",
@@ -87,6 +97,8 @@ export default {
         });
     },
     autoLocation() {
+      if (this.handleCityChange === "" && !this.isValid) return;
+
       if (navigator.geolocation) {
         this.isLoading = true;
         navigator.geolocation.getCurrentPosition((position) => {
@@ -144,16 +156,26 @@ nav {
   flex-direction: column;
 }
 #background_weather {
-    width: 10em;
-    position: absolute;
-    top: calc(50% - 4em);
-    z-index: -1;
+  width: 10em;
+  position: absolute;
+  top: calc(50% - 4em);
+  z-index: -1;
 }
 .mainContainer_loading {
   display: grid;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.errorText {
+  color: red;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  width: 80%;
+  margin: auto;
+  margin-top: 2em;
+  padding: 0;
 }
 .mainContainer {
   display: flex;
