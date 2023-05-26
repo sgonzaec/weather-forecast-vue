@@ -4,15 +4,24 @@ import WeatherInfo from "../WeatherInfo/WeatherInfo.vue";
 
 <template>
   <nav>
-    <label for="searchbar">WeatherForecast.com</label>
+    <label @click="savedValue = ''">WeatherForecast.com</label>
     <div class="groupDataUser">
       <input
         type="search"
+        id="searchbar"
         placeholder="Ingresa una ciudad"
         v-model="handleCityChange"
-        @change="manualLocation"
-        @blur="manualLocation"
+        @keyup="getSuggestions"
       />
+      <ul class="suggestionList" v-if="showSuggestions">
+        <li
+          v-for="suggestion in suggestions"
+          :key="suggestion"
+          @click="manualLocation(suggestion)"
+        >
+          {{ suggestion.description }}
+        </li>
+      </ul>
       <button
         class="yourLocation"
         title="usa tu ubicación"
@@ -35,7 +44,10 @@ import WeatherInfo from "../WeatherInfo/WeatherInfo.vue";
         alt="background"
         id="background_weather"
       />
-      <!-- <p v-else-if="!isValid" class="errorText">Por favor ingresa texto sin caracteres especiales ni numeros.</p> -->
+      <p v-else-if="isFound === 0" class="errorText">
+        We did not find matches, please try entering another city and verify
+        that you do not have characters or symbols.
+      </p>
       <WeatherInfo v-else :data="savedValue" />
     </div>
   </div>
@@ -52,8 +64,11 @@ export default {
       API_KEY: "a79bcd1f286c5df8c8cda3ec06202e20",
       handleCityChange: "",
       isValid: true,
+      isFound: 1,
       savedValue: "",
       isCurrentLocation: false,
+      suggestions: [],
+      showSuggestions: false,
     };
   },
   methods: {
@@ -64,12 +79,14 @@ export default {
     quitarTildes(texto) {
       return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     },
-    manualLocation() {
+    manualLocation(suggestion) {
       this.validateText();
       if (this.handleCityChange === "" && !this.isValid) return;
 
       fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${this.quitarTildes(this.handleCityChange)}&appid=${this.API_KEY}`,
+        `https://api.openweathermap.org/data/2.5/weather?q=${this.quitarTildes(
+          suggestion?.terms?.[0]?.value
+        )}&appid=${this.API_KEY}`,
         {
           headers: {
             accept: "*/*",
@@ -88,9 +105,19 @@ export default {
           credentials: "omit",
         }
       )
-        .then((response) => response.json())
+        .then((response) => {
+          if (response.status === 404) {
+            this.isFound = 0;
+            return;
+          } else {
+            this.isFound = 1;
+          }
+          return response.json();
+        })
         .then((data) => {
+          this.showSuggestions = false;
           this.savedValue = data;
+          this.handleCityChange = "";
         })
         .catch((error) => {
           console.error("Error al obtener los datos del clima:", error);
@@ -140,6 +167,25 @@ export default {
         this.isLoading = false;
       }
     },
+    getSuggestions() {
+      if (this.handleCityChange === "") {
+        this.showSuggestions = false;
+        return;
+      }
+
+      if (this.handleCityChange.length < 3) return;
+
+      const service = new window.google.maps.places.AutocompleteService();
+      service.getPlacePredictions(
+        { input: this.handleCityChange },
+        (predictions, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+            this.suggestions = predictions;
+            this.showSuggestions = true;
+          }
+        }
+      );
+    },
   },
 };
 </script>
@@ -161,6 +207,20 @@ nav {
   top: calc(50% - 4em);
   z-index: -1;
 }
+.suggestionList {
+  position: absolute;
+  background-color: white;
+  padding: 1em 2em;
+  list-style: none;
+  top: 25px;
+  border-radius: 5px;
+}
+.suggestionList li {
+  padding: 0.5em;
+  margin: 0.3em;
+  border-bottom: 1px solid #e7e7e7;
+  cursor: pointer;
+}
 .mainContainer_loading {
   display: grid;
   flex-direction: column;
@@ -172,10 +232,16 @@ nav {
   font-size: 1.5em;
   font-weight: bold;
   text-align: center;
+  display: grid;
   width: 80%;
   margin: auto;
   margin-top: 2em;
   padding: 0;
+}
+.errorText span {
+  color: #1976d2;
+  font-size: 4em;
+  font-style: italic;
 }
 .mainContainer {
   display: flex;
@@ -187,6 +253,7 @@ nav {
   display: flex;
   width: 90%;
   gap: 1em;
+  position: relative;
   align-items: center;
   flex-direction: row;
   justify-content: space-between;
