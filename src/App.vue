@@ -1,16 +1,19 @@
 <script>
 import WeatherForecast from "./components/weather-forecast/WeatherForecast.vue";
+import NoteAlert from "./components/Note/Note.vue";
 
 export default {
   name: "App",
   components: {
     WeatherForecast,
+    NoteAlert
   },
 };
 </script>
 
 <template>
   <WeatherForecast />
+  <NoteAlert />
 </template>
 
 <style>
